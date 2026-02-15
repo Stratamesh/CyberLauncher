@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cyber-Launcher v1.5 - Stable</title>
+    <style>
+        :root {
+            --blue: rgba(135, 206, 235, 0.4);
+            --green: rgba(144, 238, 144, 0.4);
+            --orange: rgba(255, 165, 0, 0.4);
+            --pink: rgba(255, 105, 180, 0.4);
+        }
+
+        body {
+            margin: 0; height: 100vh;
+            background: #1a1c1e;
+            overflow: hidden;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            font-family: 'Consolas', 'Monaco', monospace;
+            perspective: 2000px;
+            transition: background 0.8s ease;
+        }
+
+        /* CRT SCANLINES */
+        body::before {
+            content: " "; display: block; position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
+            z-index: 1000; background-size: 100% 3px, 3px 100%; pointer-events: none;
+        }
+
+        #stage {
+            position: relative; width: 100vw; height: 350px;
+            display: flex; justify-content: center; align-items: center;
+            transform-style: preserve-3d;
+        }
+
+        .slab-container {
+            position: absolute; width: 160px; height: 160px;
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            transform-style: preserve-3d; z-index: 10;
+        }
+
+        .slab {
+            position: relative; width: 100%; height: 100%;
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 4px;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            color: white; transition: all 0.4s ease;
+            text-align: center;
+        }
+
+        .en-text { font-size: 16px; font-weight: 800; letter-spacing: 2px; }
+        .jp-text { font-size: 10px; opacity: 0.7; margin-top: 5px; }
+
+        /* EXPANSION LOGIC */
+        .expanded {
+            position: fixed !important; top: 50% !important; left: 50% !important;
+            width: 80vw !important; height: 65vh !important;
+            transform: translate(-50%, -50%) !important; z-index: 500 !important;
+        }
+        
+        .hidden-node { opacity: 0 !important; transform: scale(0.2) translateZ(-500px) !important; pointer-events: none; }
+
+        /* CATEGORY STYLES */
+        .master { background: rgba(135, 206, 235, 0.15); border-color: skyblue; }
+        .green { background: rgba(144, 238, 144, 0.15); border-color: palegreen; }
+        .orange { background: rgba(255, 165, 0, 0.15); border-color: orange; }
+        .pink { background: rgba(255, 105, 180, 0.15); border-color: #ff69b4; }
+
+        /* LINKS */
+        .link-grid {
+            display: none;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-top: 30px;
+            width: 60%;
+        }
+        .expanded .link-grid { display: grid; }
+
+        .sys-link {
+            padding: 15px; border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.05); color: white;
+            text-decoration: none; font-size: 13px; letter-spacing: 2px;
+            transition: all 0.3s; text-align: center;
+        }
+        .sys-link:hover { background: rgba(255, 255, 255, 0.2); box-shadow: 0 0 15px rgba(255, 255, 255, 0.2); }
+
+        .close-btn {
+            margin-top: 40px; padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.02); 
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255,255,255,0.4);
+            cursor: pointer; font-family: inherit; font-size: 10px;
+            letter-spacing: 2px;
+        }
+
+        /* POSITIONS */
+        .pos-0 { transform: translateX(-330px); }
+        .pos-1 { transform: translateX(-110px); }
+        .pos-2 { transform: translateX(110px); }
+        .pos-3 { transform: translateX(330px); }
+
+        /* FOOTER DATA */
+        #footer-ui {
+            margin-top: 40px; display: flex; align-items: flex-start;
+            gap: 30px; color: #87ceeb; font-size: 11px;
+            width: 700px; padding: 20px; border-top: 1px solid rgba(135, 206, 235, 0.2);
+            text-transform: uppercase;
+        }
+        #radar {
+            width: 40px; height: 40px; border: 1px solid rgba(135, 206, 235, 0.4);
+            border-radius: 50%; position: relative;
+        }
+        #radar::after {
+            content: ""; position: absolute; top: 50%; left: 50%;
+            width: 15px; height: 1px; background: #fff;
+            transform-origin: left; animation: sweep 2s linear infinite;
+        }
+        @keyframes sweep { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .data-block { display: flex; flex-direction: column; gap: 4px; }
+    </style>
+</head>
+<body>
+
+<div id="stage">
+    <div id="mainCont" class="slab-container">
+        <div id="mainSlab" class="slab master" style="cursor:pointer">
+            <div class="en-text">LAUNCHER</div>
+            <div class="jp-text">ランチャー</div>
+        </div>
+    </div>
+</div>
+
+<div id="footer-ui">
+    <div id="radar"></div>
+    <div class="data-block">
+        <div id="d1">CONNECTION: SECURE</div>
+        <div id="bitstream">PKT_IN: 0x0000</div>
+        <div style="opacity:0.5">HUB_STATUS: LISTENING</div>
+    </div>
+    <div class="data-block" style="margin-left: auto; text-align: right;">
+        <div id="nodeIdDisplay">NODE_ID: 1.5000</div>
+        <div id="uptimeDisplay">UPTIME: 00:00:00</div>
+        <div style="color:rgba(255,255,255,0.3)">OS_VER_8.1.0</div>
+    </div>
+</div>
+
+<script>
+    const mainCont = document.getElementById('mainCont');
+    const mainSlab = document.getElementById('mainSlab');
+    const stage = document.getElementById('stage');
+    const bitstream = document.getElementById('bitstream');
+    const uptimeDisplay = document.getElementById('uptimeDisplay');
+    const nodeIdDisplay = document.getElementById('nodeIdDisplay');
+    
+    let state = "IDLE";
+    let children = [];
+    let startTime = Date.now();
+
+    // LIVE DATA TICKER
+    setInterval(() => {
+        const diff = Date.now() - startTime;
+        const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
+        const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
+        const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
+        uptimeDisplay.innerText = `UPTIME: ${h}:${m}:${s}`;
+        bitstream.innerText = "PKT_IN: 0x" + Math.random().toString(16).slice(2,6).toUpperCase();
+        nodeIdDisplay.innerText = "NODE_ID: " + (1.5 + Math.random() * 0.01).toFixed(4);
+    }, 1000);
+
+    mainSlab.addEventListener('click', () => {
+        if (state === "IDLE") initialize();
+        else resetToIdle();
+    });
+
+    function initialize() {
+        state = "ACTIVE";
+        mainSlab.innerHTML = '<div class="en-text">HOME</div><div class="jp-text">ホーム</div>';
+        mainCont.classList.add('pos-0');
+
+        const configs = [
+            { c: 'green', en: 'AI TOOLS', jp: '人工知能', bg: '#0d1a0d',
+              links: [{name:'CHATGPT',url:'https://chat.openai.com'}, {name:'GEMINI',url:'https://gemini.google.com'}, {name:'DEEPSEEK',url:'https://deepseek.com'}, {name:'PERPLEXITY',url:'https://perplexity.ai'}] },
+            { c: 'orange', en: 'WEB', jp: 'ウェブ', bg: '#1a120d',
+              links: [{name:'GMAIL',url:'https://mail.google.com'}, {name:'GITHUB',url:'https://github.com'}, {name:'YOUTUBE',url:'https://youtube.com'}, {name:'THE VERGE',url:'https://theverge.com'}] },
+            { c: 'pink', en: 'DESIGN', jp: 'デザイン', bg: '#1a0d14',
+              links: [{name:'ADOBE EXPRESS',url:'https://www.adobe.com/express/'}, {name:'CANVA',url:'https://canva.com'}, {name:'MAKERWORLD',url:'https://makerworld.com'}, {name:'CULTS 3D',url:'https://cults3d.com'}] }
+        ];
+
+        configs.forEach((cfg, i) => {
+            setTimeout(() => {
+                const c = document.createElement('div');
+                c.className = `slab-container pos-${i+1}`;
+                const s = document.createElement('div');
+                s.className = `slab ${cfg.c}`;
+                s.style.cursor = "pointer";
+                let linksHtml = cfg.links.map(l => `<a href="${l.url}" target="_blank" class="sys-link">[ ${l.name} ]</a>`).join('');
+                s.innerHTML = `<div class="en-text">${cfg.en}</div><div class="jp-text">${cfg.jp}</div><div class="link-grid">${linksHtml}</div><button class="close-btn" style="display:none" onclick="event.stopPropagation(); collapseToHub();">[ RETURN TO HUB ]</button>`;
+                s.onclick = () => { if (state === "ACTIVE") expand(c, cfg.bg); };
+                c.appendChild(s);
+                stage.appendChild(c);
+                children.push(c);
+            }, i * 100);
+        });
+    }
+
+    function expand(target, bgColor) {
+        state = "EXPANDED";
+        document.body.style.background = bgColor;
+        target.classList.add('expanded');
+        target.querySelector('.close-btn').style.display = 'block';
+        mainCont.classList.add('hidden-node');
+        children.forEach(item => { if (item !== target) item.classList.add('hidden-node'); });
+    }
+
+    function collapseToHub() {
+        state = "ACTIVE";
+        document.body.style.background = "#1a1c1e";
+        mainCont.classList.remove('hidden-node');
+        children.forEach(c => {
+            c.classList.remove('expanded');
+            c.classList.remove('hidden-node');
+            c.querySelector('.close-btn').style.display = 'none';
+        });
+    }
+
+    function resetToIdle() {
+        state = "IDLE";
+        document.body.style.background = "#1a1c1e";
+        children.forEach(c => c.remove());
+        children = [];
+        mainCont.className = "slab-container";
+        mainSlab.innerHTML = '<div class="en-text">LAUNCHER</div><div class="jp-text">ランチャー</div>';
+    }
+</script>
+</body>
+</html>
